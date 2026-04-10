@@ -38,8 +38,10 @@ def create_formats(wb):
         'info':       fmt(bg_color='#EBF3FB', align='left', font_size=9, border=0),
         'best':       fmt(bold=True, bg_color='#C6EFCE', font_color='#375623'),
         'best_pct':   fmt(bold=True, bg_color='#C6EFCE', font_color='#375623', num_format='0.0%'),
+        'best_rub':   fmt(bold=True, bg_color='#C6EFCE', font_color='#375623', num_format='# ##0 ₽', align='right'),
         'worst':      fmt(bold=True, bg_color='#FFC7CE', font_color='#9C0006'),
         'worst_pct':  fmt(bold=True, bg_color='#FFC7CE', font_color='#9C0006', num_format='0.0%'),
+        'worst_rub':  fmt(bold=True, bg_color='#FFC7CE', font_color='#9C0006', num_format='# ##0 ₽', align='right'),
         'kpi':        fmt(bold=True, font_size=22, border=0, bg_color=LIGHT_BLUE),
         'kpi_label':  fmt(font_size=9, border=0, bg_color=LIGHT_BLUE, font_color='#555555'),
         'dash_sub':   fmt(bold=True, bg_color=ACCENT_BLUE, font_color=WHITE, font_size=11, border=0),
@@ -57,7 +59,15 @@ def _write_pct_or_dash(ws, row, col, val, fmt_val, fmt_dash):
 
 
 def _short_months(month_list):
-    return [m.replace(' 2023', '').replace(' 2024', '') for m in month_list]
+    result = []
+    for m in month_list:
+        if '2022' in m:
+            result.append(m.replace(' 2022', " '22"))
+        elif '2024' in m:
+            result.append(m.replace(' 2024', " '24"))
+        else:
+            result.append(m.replace(' 2023', ''))
+    return result
 
 
 def write_sheet_coefficients(wb, F, pivot_k1, pivot_k2, month_order, row_order):
@@ -197,9 +207,9 @@ def write_sheet_chart(wb, F, pivot_k1, row_order):
     ws = wb.add_worksheet('График К1')
     ws.set_zoom(90)
     ws.set_column(0, 0, 20)
-    ws.set_column(1, 12, 9)
+    ws.set_column(1, len(MONTHS_2023), 9)
 
-    ws.merge_range(0, 0, 0, 12, 'Динамика К1 по месяцам 2023 года', F['title'])
+    ws.merge_range(0, 0, 0, len(MONTHS_2023), 'Динамика К1 по месяцам 2023 года', F['title'])
     ws.set_row(0, 28)
 
     short = _short_months(MONTHS_2023)
@@ -219,6 +229,7 @@ def write_sheet_chart(wb, F, pivot_k1, row_order):
                 ws.write(data_start + ri, ci + 1, val,
                          F['dept_pct'] if is_dept else F['pct'])
 
+    n_months = len(MONTHS_2023)
     chart = wb.add_chart({'type': 'line'})
     chart.set_title({'name': 'Динамика К1 по месяцам 2023 года'})
     chart.set_x_axis({'name': 'Месяц'})
@@ -231,8 +242,8 @@ def write_sheet_chart(wb, F, pivot_k1, row_order):
     for ri, am in enumerate(row_order):
         chart.add_series({
             'name':       ['График К1', data_start + ri, 0],
-            'categories': ['График К1', 2, 1, 2, 12],
-            'values':     ['График К1', data_start + ri, 1, data_start + ri, 12],
+            'categories': ['График К1', 2, 1, 2, n_months],
+            'values':     ['График К1', data_start + ri, 1, data_start + ri, n_months],
             'line': {
                 'color':     colors[ri % len(colors)],
                 'width':     3.0 if am == 'Отдел в целом' else 1.5,
@@ -287,9 +298,9 @@ def write_sheet_dashboard(wb, F, annual_df, row_order):
         if is_dept:
             rf, pf, nf = F['dept'], F['dept_pct'], F['dept_rub']
         elif am == best_am:
-            rf, pf, nf = F['best'], F['best_pct'], F['best']
+            rf, pf, nf = F['best'], F['best_pct'], F['best_rub']
         elif am == worst_am:
-            rf, pf, nf = F['worst'], F['worst_pct'], F['worst']
+            rf, pf, nf = F['worst'], F['worst_pct'], F['worst_rub']
         else:
             rf, pf, nf = F['normal'], F['pct'], F['rub']
 
