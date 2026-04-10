@@ -44,7 +44,7 @@ def deduplicate_prolongations(prol):
 
 def build_project_df(prol, fin_agg, month_cols):
     df = prol.merge(fin_agg, on='id', how='left')
-    df['last_month_col'] = df['last_month'].apply(lambda m: m.strip().capitalize())
+    df['last_month_col'] = df['last_month'].fillna('').apply(lambda m: m.strip().capitalize())
     for col in month_cols:
         df[col] = df[col].fillna(0.0)
     return df
