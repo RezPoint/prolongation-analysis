@@ -160,13 +160,14 @@ def write_sheet_annual(wb, F, annual_df, row_order):
 
 
 def write_sheet_counts(wb, F, counts_df, row_order):
+    n = len(MONTHS_2023)
     ws = wb.add_worksheet('Детализация по проектам')
     ws.set_zoom(85)
     ws.freeze_panes(4, 2)
     ws.set_column(0, 0, 30)
-    ws.set_column(1, 12, 10)
+    ws.set_column(1, n, 10)
 
-    ws.merge_range(0, 0, 0, 12,
+    ws.merge_range(0, 0, 0, n,
                    'Количество проектов и суммы отгрузки — 2023 год', F['title'])
     ws.set_row(0, 28)
 
@@ -186,7 +187,7 @@ def write_sheet_counts(wb, F, counts_df, row_order):
 
     cur_row = 2
     for metric_name, field, nfmt, dfmt in metrics:
-        ws.merge_range(cur_row, 0, cur_row, 12, metric_name, F['subheader'])
+        ws.merge_range(cur_row, 0, cur_row, n, metric_name, F['subheader'])
         cur_row += 1
         ws.write(cur_row, 0, 'Менеджер', F['header'])
         for ci, sm in enumerate(short_months):
